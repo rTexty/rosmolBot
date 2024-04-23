@@ -1,29 +1,24 @@
 from aiogram import Router, Bot
 from aiogram.types import CallbackQuery, Message
-from sqlalchemy import select
 from bot.keyboards.complete_kb import completed_tasks_keyboard
-from database.ORM import get_data
+from bot.keyboards.main_kb import create_task_keyboard
+from database.ORM import get_data, get_tasks, create_task, get_all_tasks
 from datetime import date
-from database.database import session
-from database.models import Admins
+
 
 router = Router()
 
 
 @router.callback_query(lambda callback_query: callback_query.data == 'задачи')
 async def tasks_handler(query: CallbackQuery,):
-    user_id, _, _, = await get_data(query)
+    user_id, _, _, _ = await get_data(query)
+    task = await get_tasks(query)
     if user_id == query.from_user.id:
-        await query.message.answer(f'Ваши задачи на {date.today().strftime("%d-%m-%Y")}:\n\n{tasks}',
+        await query.message.answer(f'Ваши задачи на {date.today().strftime("%d-%m-%Y")}:\n\n{task}',
                                    reply_markup=completed_tasks_keyboard)
 
 
-@router.callback_query(lambda c: c.data == 'completed_tasks')
-async def completed_tasks_handler(query: CallbackQuery, bot: Bot, message: Message):
-    user = await session.execute(select(Admins).where(Admins.user_id == message.from_user.id))
-    result = user.scalar_one_or_none()
-    if result:
-        user_id = result.user_id
-        if user_id == message.from_user.id:
-            tasks = result.tasks
-            await query.message.answer(f'Ваши задачи\n{tasks}', reply_markup=completed_tasks_keyboard)
+@router.callback_query(lambda c: c.data == 'all_tasks')
+async def all_tasks_handler(query: CallbackQuery):
+    tasks = await get_all_tasks(query)
+    await query.message.answer(f'Все задачи:\n\n{tasks}\n\nВыберите действие', reply_markup=create_task_keyboard)
