@@ -25,3 +25,4 @@ class Tasks(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     task: Mapped[str] = mapped_column(String(150), primary_key=True, nullable=True)
     is_completed: Mapped[bool] = mapped_column(default=False)
+    username: Mapped[str] = mapped_column(Text, nullable=True)

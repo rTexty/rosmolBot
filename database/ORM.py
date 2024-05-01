@@ -29,18 +29,26 @@ async def get_tasks(query: CallbackQuery):
             return '\n'.join(result)
 
 
-async def get_all_tasks(query: CallbackQuery):
+async def get_all_tasks_with_users(query: CallbackQuery):
     async with session.begin() as conn:
-        query_db = (select(Tasks.task)).distinct()
-        user = await conn.execute(query_db)
-        result = [task for task in user.scalars().all() if task is not None]
-        if result:
-            return '\n'.join(result)
+        # Join the tasks and usernames in one query instead of selecting them distinctly
+        query_db = select(Tasks.task, Tasks.username)
+        results = await conn.execute(query_db)
+        tasks_with_users = results.fetchall()  # This will get a list of tuples (task, username)
+        result = []
+        for task, username in tasks_with_users:
+            # Format the string to exclude None values, replace None with an empty string if username is None
+            display_username = username if username else ''
+            result.append(f'{task} -- {display_username}')
+        return '\n'.join(result)
 
 
 async def create_task(admin_id: int, task_description: str):
     async with session.begin() as conn:
-        new_task = Tasks(user_id=admin_id, task=task_description)
+        query_db = (select(Admins.username).where(Admins.user_id == admin_id))
+        connection = await conn.execute(query_db)
+        username = connection.scalar_one_or_none()
+        new_task = Tasks(user_id=admin_id, task=task_description, username=username)
         conn.add(new_task)
         await conn.commit()
 

@@ -1,10 +1,10 @@
 from aiogram import Router, Bot
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from bot.keyboards.complete_kb import completed_tasks_keyboard
 from bot.keyboards.main_kb import create_task_keyboard
-from database.ORM import get_data, get_tasks, create_task, get_all_tasks
+from database.ORM import get_data, get_tasks, create_task, get_all_tasks_with_users
 from datetime import date
-
 
 router = Router()
 
@@ -19,6 +19,7 @@ async def tasks_handler(query: CallbackQuery,):
 
 
 @router.callback_query(lambda c: c.data == 'all_tasks')
-async def all_tasks_handler(query: CallbackQuery):
-    tasks = await get_all_tasks(query)
-    await query.message.answer(f'Все задачи:\n\n{tasks}\n\nВыберите действие', reply_markup=create_task_keyboard)
+async def all_tasks_handler(query: CallbackQuery,):
+    tasks = await get_all_tasks_with_users(query)
+    await query.message.answer(f'Все задачи:\n\n{tasks}\n\nВыберите действие',
+                               reply_markup=create_task_keyboard)
