@@ -22,11 +22,10 @@ async def get_data(message: Message):
 
 async def get_tasks(query: CallbackQuery):
     async with session.begin() as conn:
-        query_db = (select(Tasks.task).where(Tasks.user_id == query.from_user.id))
-        user = await conn.execute(query_db)
-        result = user.scalars().all()
-        if result:
-            return '\n'.join(result)
+        query_db = (select(Tasks.task, Tasks.creator).where(Tasks.user_id == query.from_user.id))
+        results = await conn.execute(query_db)
+        tasks_with_creators = results.fetchall()  # Получаем список кортежей (task, creator)
+        return tasks_with_creators
 
 
 async def get_all_tasks_with_users(query: CallbackQuery):
@@ -43,12 +42,12 @@ async def get_all_tasks_with_users(query: CallbackQuery):
         return '\n'.join(result)
 
 
-async def create_task(admin_id: int, task_description: str):
+async def create_task(admin_id: int, task_description: str, message: Message):
     async with session.begin() as conn:
         query_db = (select(Admins.username).where(Admins.user_id == admin_id))
         connection = await conn.execute(query_db)
         username = connection.scalar_one_or_none()
-        new_task = Tasks(user_id=admin_id, task=task_description, username=username)
+        new_task = Tasks(user_id=admin_id, task=task_description, username=username, creator=message.from_user.username)
         conn.add(new_task)
         await conn.commit()
 

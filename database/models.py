@@ -20,9 +20,11 @@ class Admins(Base):
 
     username: Mapped[str] = mapped_column(Text, nullable=True)
 
+
 class Tasks(Base):
     __tablename__ = "tasks"
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     task: Mapped[str] = mapped_column(String(150), primary_key=True, nullable=True)
     is_completed: Mapped[bool] = mapped_column(default=False)
     username: Mapped[str] = mapped_column(Text, nullable=True)
+    creator: Mapped[str] = mapped_column(Text, nullable=True)

@@ -45,7 +45,7 @@ async def task_description_handler(message: Message, state: FSMContext, bot: Bot
         await message.answer('Вы не выбрали исполнителя!')
     else:
         await message.answer('Задача успешно создана!')
-        await create_task(admin_id=admin_id, task_description=text)
+        await create_task(admin_id=admin_id, task_description=text, message=message)
         await bot.send_message(chat_id=admin_id, text=f"Администратор - {message.from_user.username}\n"
                                                       f"Создал вам новую задачу:\n\n{text}")
         await state.clear()
